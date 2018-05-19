@@ -1,0 +1,65 @@
+library(tidyverse)
+
+# first record ------------------------------------------------------------
+df <- readxl::read_xlsx("Первая запись.xlsx")
+
+df %>%
+  mutate(pitch = as.double(pitch),
+         time = as.double(time),
+         `syllable number` = syllable_num,
+         `verb lexical tone` = verb_lexical_tone) %>% 
+  group_by(Utterance, translate, intonation) %>%
+  mutate(intercept = lm(pitch ~ time)$coefficients[1],
+         slope = lm(pitch ~ time)$coefficients[2],
+         `mean pitch` = mean(pitch)) %>% 
+  select(-pitch,-time,-part_sound_id,-part_curve_position,-sentence) %>%
+  distinct() ->
+  df_for_analysis
+
+df_for_analysis %>%
+  filter(!is.na(`verb lexical tone`)) %>% 
+  gather(type, value, slope, `mean pitch`, `syllable number`) %>%
+  ggplot(aes(translate, value, color = `verb lexical tone`)) +
+  geom_point() +
+  coord_flip() +
+  facet_grid(intonation ~ type, scales = "free_x") +
+  theme_bw() +
+  labs(x = "", y = "")
+
+# new data ---------------------------------------------------------------------
+df <- readxl::read_xlsx("last.xlsx")
+
+df %>%
+  mutate(pitch = as.double(pitch),
+         time = as.double(time),
+         `syllable number` = syllable_num,
+         `verb lexical tone` = verb_lexical_tone,
+         translate = factor(translate, levels = c("women_fight",
+                                                  "woman_watched_at_child",
+                                                  "woman_saw_the_stone",
+                                                  "woman_molotj_banku",
+                                                  "dog_grasp_meat",
+                                                  "bird_fly",
+                                                  "Man_built_house",
+                                                  "woman_waited_the_man",
+                                                  "woman_run",
+                                                  "woman_listened_the_song",
+                                                  "woman_liked_the_fruit",
+                                                  "woman_hated_the_man",
+                                                  "woman_count_fruits",
+                                                  "woman_bake_abodo"))) %>% 
+  group_by(Utterance, translate, intonation) %>%
+  mutate(intercept = lm(pitch ~ time)$coefficients[1],
+         slope = lm(pitch ~ time)$coefficients[2],
+         `mean pitch` = mean(pitch)) %>% 
+  select(-pitch,-time,-part_sound_id,-part_curve_position,-sentence) %>%
+  distinct() ->
+  df_for_analysis
+
+df_for_analysis %>%
+  gather(type, value, slope, `mean pitch`, `syllable number`) %>%
+  ggplot(aes(translate, value, color = `verb lexical tone`)) +
+  geom_point() +
+  coord_flip() +
+  facet_grid(intonation ~ type, scales = "free_x") +
+  theme_bw() +
